@@ -23,6 +23,14 @@ else:
     _int_types = (int, long)  # noqa
 
 
+class ValidateException(Exception):
+    def __init__(self, message, definition, field, value):
+        self.definition = definition
+        self.message = message
+        self.field = field
+        self.value = value
+
+
 class ValidationError(ValueError):
     """ Raised when the target dictionary is missing or has the wrong format
     """
@@ -279,7 +287,10 @@ class Validator(object):
 
             definition = self.schema.get(field)
             if definition is not None:
-                self._validate_definition(definition, field, value)
+                try:
+                    self._validate_definition(definition, field, value)
+                except Exception as e:
+                    raise ValidateException(str(e), definition, field, value)
             else:
                 if self.allow_unknown:
                     if isinstance(self.allow_unknown, Mapping):
